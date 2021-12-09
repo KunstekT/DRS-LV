@@ -5,7 +5,7 @@
 
 //***********************************************TO DO 9*************************************************//
 //***********************************Definirati konstantu KEYBOARD_ACK***********************************//
-
+const int KEYBOARD_ACK = /*TODO*/ ; // ili #define KEYBOARD_ACK = ?
 
 //******************************************************************************************************//
 
@@ -37,8 +37,8 @@ int main(void)
 
 		//***********************************************TO DO 6************************************************//
 		//***Poslati vrijednost varijable SendCODE i nakon toga vrijednost varijable i putem PS2 sučelja********//
-
-		
+		Ps2SendData(SendCODE);
+		Ps2SendData(i);
 		
 		//******************************************************************************************************//
 
@@ -51,19 +51,19 @@ int main(void)
 
 		//***********************************************TO DO 7*************************************************//
 		//*********************************Primiti 1 byte podataka od tipkovnice********************************//
-
+		Status = Ps2ReceiveData();
 		
 		//******************************************************************************************************//
 
 
-		if (Status != XST_SUCCESS){
+		if (Status != XST_SUCCESS) {
 			return XST_FAILURE;
 			print("Data receiving FAILED!\r\n");
 		}
 		else
 			//***********************************************TO DO 8********************************************//
 			//****************Ispisati vrijednost primljenu od tipkovnice u heksadecimalnom obliku**************//
-
+			Xil_printf("%x", &Status);
 			
 			//**************************************************************************************************//
 	}
@@ -91,7 +91,7 @@ int Ps2Initialize(u16 Ps2DeviceId)
 
 	//***********************************************TO DO 2*************************************************//
 	//*************************************Inicijalizirati PS2 kontroler*************************************//
-	XPs2_CfgInitialize(&Ps2Inst /*XPs2 * InstancePtr*/, Ps2ConfigPtr /*XPs2_Config * Config*/, TODO/*u32 EffectiveAddr*/);
+	XPs2_CfgInitialize(&Ps2Inst, Ps2ConfigPtr, Ps2ConfigPtr->BaseAddress); /* (XPs2 * InstancePtr, XPs2_Config * Config, u32 EffectiveAddr) */
 	
 	//*******************************************************************************************************//
 
@@ -112,7 +112,7 @@ int Ps2SendData(u8 data){
 	
 	//***********************************************TO DO 3*************************************************//
 	//****Poslati 1 byte podataka putem PS2 sucelja, povratnu vrijdnost spremiti u varijablu BytesSent*******//
-	XPs2_Send(&Ps2Inst/*XPs2 * InstancePtr*/, data/*u8 * BufferPtr*/, (u32)1/*u32 NumBytes*/);
+	XPs2_Send(&Ps2Inst, data, (u32)1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
 	
 	//*******************************************************************************************************//
 	if( BytesSent != 1) {
@@ -128,7 +128,7 @@ int Ps2SendData(u8 data){
 
 	//***********************************************TO DO 4*************************************************//
 	//****Primiti 1 byte podataka putem PS2 sucelja, povratnu vrijdnost spremiti u varijablu BytesReceived***//
-	BytesReceived = XPs2_Recv(&Ps2Inst/*XPs2 * InstancePtr*/, RxBuffer/*u8 * BufferPtr*/, (u32)1/*u32 NumBytes*/);
+	BytesReceived = XPs2_Recv(&Ps2Inst, RxBuffer, (u32)1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
 	
 	//*******************************************************************************************************//
 
@@ -157,7 +157,7 @@ int Ps2ReceiveData(){
 
 	//***********************************************TO DO 5*************************************************//
 	//***Primiti 1 byte podataka putem PS2 sucelja, povratnu vrijdnost spremiti u varijablu BytesReceived****//
-	BytesReceived = XPs2_Recv(&Ps2Inst/*XPs2 * InstancePtr*/, RxBuffer/*u8 * BufferPtr*/, (u32)1/*u32 NumBytes*/);
+	BytesReceived = XPs2_Recv(&Ps2Inst, RxBuffer, (u32)1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
 	
 	//*******************************************************************************************************//
 
