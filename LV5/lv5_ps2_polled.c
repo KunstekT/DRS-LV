@@ -1,11 +1,12 @@
 #include "xps2.h"
 #include "xparameters.h"
 #include "xstatus.h"
+#include "xil_printf.h"
 #include "stdio.h"
 
 //***********************************************TO DO 9*************************************************//
 //***********************************Definirati konstantu KEYBOARD_ACK***********************************//
-const int KEYBOARD_ACK = /*TODO*/ ; // ili #define KEYBOARD_ACK = ?
+#define KEYBOARD_ACK 0xFA
 
 //******************************************************************************************************//
 
@@ -39,7 +40,7 @@ int main(void)
 		//***Poslati vrijednost varijable SendCODE i nakon toga vrijednost varijable i putem PS2 sučelja********//
 		Ps2SendData(SendCODE);
 		Ps2SendData(i);
-		
+
 		//******************************************************************************************************//
 
 		//delay od cca 1s
@@ -52,7 +53,7 @@ int main(void)
 		//***********************************************TO DO 7*************************************************//
 		//*********************************Primiti 1 byte podataka od tipkovnice********************************//
 		Status = Ps2ReceiveData();
-		
+
 		//******************************************************************************************************//
 
 
@@ -63,8 +64,8 @@ int main(void)
 		else
 			//***********************************************TO DO 8********************************************//
 			//****************Ispisati vrijednost primljenu od tipkovnice u heksadecimalnom obliku**************//
-			Xil_printf("%x", &Status);
-			
+			xil_printf("%x\r\n", RxBuffer);
+
 			//**************************************************************************************************//
 	}
 }
@@ -79,7 +80,7 @@ int Ps2Initialize(u16 Ps2DeviceId)
 	//***********************************************TO DO 1*************************************************//
 	//******Dohvatiti konfiguraciju PS2 sučelja, povratnu vrijednost spremiti u varijablu Ps2ConfigPtr*******//
 	Ps2ConfigPtr = XPs2_LookupConfig(Ps2DeviceId);
-	
+
 	//******************************************************************************************************//
 	if (Ps2ConfigPtr == NULL) {
 		print("Config Lookup FAILED!\r\n");
@@ -92,7 +93,7 @@ int Ps2Initialize(u16 Ps2DeviceId)
 	//***********************************************TO DO 2*************************************************//
 	//*************************************Inicijalizirati PS2 kontroler*************************************//
 	XPs2_CfgInitialize(&Ps2Inst, Ps2ConfigPtr, Ps2ConfigPtr->BaseAddress); /* (XPs2 * InstancePtr, XPs2_Config * Config, u32 EffectiveAddr) */
-	
+
 	//*******************************************************************************************************//
 
 	print("PS2 Initialize SUCCESS!\r\n");
@@ -109,11 +110,11 @@ int Ps2SendData(u8 data){
 	u32 BytesSent;
 	u32 BytesReceived;
 	int ACK_WAIT = 10000;
-	
+
 	//***********************************************TO DO 3*************************************************//
 	//****Poslati 1 byte podataka putem PS2 sucelja, povratnu vrijdnost spremiti u varijablu BytesSent*******//
-	XPs2_Send(&Ps2Inst, data, (u32)1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
-	
+	BytesSent = XPs2_Send(&Ps2Inst, &data, 1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
+
 	//*******************************************************************************************************//
 	if( BytesSent != 1) {
 		print("Data Send FAILED!\r\n");
@@ -128,8 +129,8 @@ int Ps2SendData(u8 data){
 
 	//***********************************************TO DO 4*************************************************//
 	//****Primiti 1 byte podataka putem PS2 sucelja, povratnu vrijdnost spremiti u varijablu BytesReceived***//
-	BytesReceived = XPs2_Recv(&Ps2Inst, RxBuffer, (u32)1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
-	
+	BytesReceived = XPs2_Recv(&Ps2Inst, &RxBuffer, 1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
+
 	//*******************************************************************************************************//
 
 	//Provjeriti jel primljen ACK byte
@@ -157,8 +158,8 @@ int Ps2ReceiveData(){
 
 	//***********************************************TO DO 5*************************************************//
 	//***Primiti 1 byte podataka putem PS2 sucelja, povratnu vrijdnost spremiti u varijablu BytesReceived****//
-	BytesReceived = XPs2_Recv(&Ps2Inst, RxBuffer, (u32)1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
-	
+	BytesReceived = XPs2_Recv(&Ps2Inst, &RxBuffer, 1); /*(XPs2 * InstancePtr, u8 * BufferPtr, u32 NumBytes)*/
+
 	//*******************************************************************************************************//
 
 	return XST_SUCCESS;
