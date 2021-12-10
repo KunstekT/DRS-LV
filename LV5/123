@@ -1,0 +1,20 @@
+	if(flag == 0 && RxBuffer == 0x16){
+				ledsValue = ledsValue^0b10000000;
+			} else if(flag == 0 && RxBuffer == 0x1E){
+				ledsValue = ledsValue^0b01000000;
+			} else if(flag == 0 && RxBuffer == 0x26){
+				ledsValue = ledsValue^0b00100000;
+			} else if(flag == 0 && RxBuffer == 0x25){
+				ledsValue = ledsValue^0b00010000;
+			} else if(flag == 0 && RxBuffer == 0x2E) {
+				ledsValue = ledsValue^0b00001000;
+			} else if(flag == 0 && RxBuffer == 0x36){
+				ledsValue = ledsValue^0b00000100;
+			} else if(flag == 0 && RxBuffer == 0x3D){
+				ledsValue = ledsValue^0b00000010;
+			} else if(flag == 0 && RxBuffer == 0x3E){
+				ledsValue = ledsValue^0b00000001;
+			}
+			if(RxBuffer==0xF0){flag=1;}
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+			if(RxBuffer!=0xF0 && flag != 0){flag=0;}
