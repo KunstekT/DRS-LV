@@ -1,21 +1,16 @@
 #include "stdio.h"
 #include "xil_exception.h"
 #include "xstatus.h"
-//***********************************************TO DO 1*************************************************//
-//*************************Uključiti datoteke xparameters.h, xps2.h, xintc.h ****************************//
+#include "xparameters.h"
+#include "xps2.h"
+#include "xintc.h"
+#include "xgpio.h"
 
+// Definirati konstante PS2_DEVICE_ID, INTC_DEVICE_ID i INTR_ID
 
-
-
-//******************************************************************************************************//
-
-//***********************************************TO DO 2*************************************************//
-//*********************Definirati konstante PS2_DEVICE_ID, INTC_DEVICE_ID i INTR_ID**********************//
-
-
-
-
-//******************************************************************************************************//
+#define PS2_DEVICE_ID XPAR_PS2_0_DEVICE_ID
+#define INTC_DEVICE_ID XPAR_INTC_0_DEVICE_ID
+#define INTR_ID XPAR_INTC_0_PS2_0_VEC_ID
 
 /*************************** Definiranje makroa *****************************/
 #define printf xil_printf
@@ -28,9 +23,16 @@ static void Ps2IntrHandler(void *CallBackRef, u32 Event, u32 EventData);
 
 static int Ps2SetupIntrSystem(XIntc* IntcInstPtr, XPs2 *Ps2Ptr, u8 IntrId);
 
-//***********************************************TO DO 3*************************************************//
-//*********************************Deklarirati varijable Ps2Inst i IntcInst******************************//
+// Deklarirati varijable Ps2Inst i IntcInst
 
+XPs2 Ps2Inst;
+XIntc IntcInst;
+
+XGpio leds;
+volatile int counter = 0;
+volatile u8 buffer = 0x00;
+volatile u8 ledsValue = 0x01;
+volatile int flag = 0;
 
 //******************************************************************************************************//
 
@@ -44,21 +46,15 @@ volatile static int TimeOut = FALSE;   		/* Flag to indicate Watchdog Timeout */
 volatile static int TxNumBytes = 0;			/* Number of bytes transmitted */
 volatile static int RxNumBytes = 0;     	/* Number of bytes received */
 
-//***********************************************TO DO 4*************************************************//
-//************************************Deklarirati varijablu RxBuffer*************************************//
-
-//*******************************************************************************************************//
+// Deklarirati varijablu RxBuffer
+u8 RxBuffer;
 
 int main(void)
 {
 	int Status;
 
-//***********************************************TO DO 5*************************************************//
-//******Pozvati funkciju Ps2IntrExample, povratnu vrijednost funkcije spremiti u varijablu Status********//
-
-	
-//*******************************************************************************************************//
-
+// Pozvati funkciju Ps2IntrExample
+	Status = Ps2IntrExample(&IntcInst,&Ps2Inst,PS2_DEVICE_ID,INTR_ID);
 	if (Status != XST_SUCCESS) {
 		return XST_FAILURE;
 	}
@@ -90,20 +86,18 @@ int Ps2IntrExample(XIntc* IntcInstPtr, XPs2* Ps2InstPtr,
 	int Status;
 	XPs2_Config *ConfigPtr;
 
-	//***********************************************TO DO 6*************************************************//
-	//******Dohvatiti konfiguraciju PS2 sučelja, povratnu vrijednost spremiti u varijablu ConfigPtr**********//
-	ConfigPtr = XPs2_LookupConfig(u16 DeviceId);
-	
-	//*******************************************************************************************************//
+	// Dohvatiti konfiguraciju PS2 sučelja
+	ConfigPtr = XPs2_LookupConfig(Ps2DeviceId);
 	if (ConfigPtr == NULL) {
 		return XST_FAILURE;
 	}
 
-	//***********************************************TO DO 7*************************************************//
-	//*************************************Inicijalizirati PS2 kontroler*************************************//
-	XPs2_CfgInitialize(...);
-	
-	//*******************************************************************************************************//
+	// Inicijalizirati PS2 kontroler
+	XPs2_CfgInitialize(Ps2InstPtr,ConfigPtr,ConfigPtr->BaseAddress);
+
+	XGpio_Initialize(&leds,XPAR_LEDS_8BITS_DEVICE_ID);
+	XGpio_SetDataDirection(&leds,1,0x00000000);
+	XGpio_DiscreteWrite(&leds,1,ledsValue);
 
 	//Self Test PS/2 uređaja
 	Status = XPs2_SelfTest(Ps2InstPtr);
@@ -111,11 +105,8 @@ int Ps2IntrExample(XIntc* IntcInstPtr, XPs2* Ps2InstPtr,
 		return XST_FAILURE;
 	}
 
-	//***********************************************TO DO 8*************************************************//
-	//*******Pozvati funkciju Ps2SetupIntrSystem, povratnu vrijednost spremiti u varijablu Status************//
-	Status = Ps2SetupIntrSystem(...);
-	
-	//*******************************************************************************************************//
+	// Pozvati funkciju Ps2SetupIntrSystem
+	Status = Ps2SetupIntrSystem(IntcInstPtr,Ps2InstPtr,Ps2IntrId);
 	if (Status != XST_SUCCESS) {
 		return XST_FAILURE;
 	}
@@ -123,12 +114,9 @@ int Ps2IntrExample(XIntc* IntcInstPtr, XPs2* Ps2InstPtr,
 	//Postavljanje prekidne rutine
 	XPs2_SetHandler(&Ps2Inst, (XPs2_Handler)Ps2IntrHandler, &Ps2Inst);
 
-	//***********************************************TO DO 9*************************************************//
-	//******Omogućiti prekide za prijem podataka i globalno omogućiti prekide u XPS PS2 kontroleru***********//
-	XPs2_IntrEnable(...);
-	XPs2_IntrGlobalEnable(...);
-	
-	//*******************************************************************************************************//
+	// Omogućiti prekide za prijem podataka i globalno omogućiti prekide u XPS PS2 kontroleru
+	XPs2_IntrEnable(Ps2InstPtr,XPS2_IPIXR_ALL);
+	XPs2_IntrGlobalEnable(&Ps2Inst);
 
 	printf("\r\n Press Keys on the keyboard \r\n");
 
@@ -176,11 +164,8 @@ int Ps2IntrExample(XIntc* IntcInstPtr, XPs2* Ps2InstPtr,
 ******************************************************************************/
 static void Ps2IntrHandler(void *CallBackRef, u32 IntrMask, u32 ByteCount)
 {
-	//***********************************************TO DO 10*************************************************//
-	//********************************Primiti 1 byte podataka putem PS2 sucelja*******************************//
-	XPs2_Recv(...)
-	
-	//********************************************************************************************************//
+	// Primiti 1 byte podataka putem PS2 sucelja
+	XPs2_Recv(&Ps2Inst,&RxBuffer,1);
 
 	//Podatak je primljen.
 	if (IntrMask & XPS2_IPIXR_RX_FULL) {
@@ -189,7 +174,81 @@ static void Ps2IntrHandler(void *CallBackRef, u32 IntrMask, u32 ByteCount)
 		RxNumBytes = ByteCount;
 
 		printf("%x\r\n", RxBuffer);
+
+		//3.Zadtak
+		if(RxBuffer == 0x6B){
+			ledsValue = (ledsValue << 1|ledsValue >> 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+			flag = 1;
+		} else if(RxBuffer == 0x74){
+			ledsValue = (ledsValue >> 1 | ledsValue << 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+			flag = 1;
+		}
+
+		if(RxBuffer == 0xF0){
+			flag = 0;
+		}
+
+		/*if(flag && buffer == 0x6B ){
+			ledsValue = (ledsValue << 1|ledsValue >> 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+			flag = 0;
+		} else if (flag && buffer == 0x74){
+			ledsValue = (ledsValue >> 1 | ledsValue << 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+			flag = 0;
+		}*/
+
+
+		/*if(flag){
+			ledsValue = (ledsValue << 1|ledsValue >> 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+			flag = 0;
+		} else if (flag && buffer == 0x74){
+			ledsValue = (ledsValue >> 1 | ledsValue << 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+			flag = 0;
+		*/
+		buffer = RxBuffer;
+
+		/*if(RxBuffer == 0x6B && buffer != 0xF0){
+			ledsValue = (ledsValue << 1|ledsValue >> 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+		} else if(RxBuffer == 0x74 && buffer !=0xF0){
+			ledsValue = (ledsValue >> 1 | ledsValue << 7);
+			XGpio_DiscreteWrite(&leds,1,ledsValue);
+		}
+		buffer = RxBuffer;
+		*/
+
+
+
 		//printf ("Interrupt mask: XPS2_IPIXR_RX_FULL\r\n");
+		//2.Zadtak
+		//counter++
+		//XGpio_DiscreteWrite(&leds,1,counter);
+
+		//Zadatak 1.
+		/*if(RxBuffer == 0x16){
+			XGpio_DiscreteWrite(&leds,1,0b00000001);
+		} else if(RxBuffer == 0x1E){
+			XGpio_DiscreteWrite(&leds,1,0b00000010);
+		} else if(RxBuffer == 0x26){
+			XGpio_DiscreteWrite(&leds,1,0b00000100);
+		} else if(RxBuffer == 0x25){
+			XGpio_DiscreteWrite(&leds,1,0b00001000);
+		} else if(RxBuffer == 0x2E) {
+			XGpio_DiscreteWrite(&leds,1,0b00010000);
+		} else if(RxBuffer == 0x36){
+			XGpio_DiscreteWrite(&leds,1,0b00100000);
+		} else if(RxBuffer == 0x3D){
+			XGpio_DiscreteWrite(&leds,1,0b01000000);
+		} else if(RxBuffer == 0x3E){
+			XGpio_DiscreteWrite(&leds,1,0b10000000);
+		}*/
+
+
 	}
 
 	//Primljena je pogreška.
@@ -249,12 +308,8 @@ static int Ps2SetupIntrSystem(XIntc* IntcInstPtr, XPs2 *Ps2Ptr, u8 IntrId )
 {
 	int Status;
 
-
-	//**********************************************TO DO 11*************************************************//
-	//****Inicijalizirati upravljač prekidima, povratnu vrijednost funkcije spremiti u varijablu Status******//
-	
-	
-	//*******************************************************************************************************//
+	// Inicijalizirati upravljač prekidima
+	Status = XIntc_Initialize(IntcInstPtr, INTC_DEVICE_ID);
 	if (Status != XST_SUCCESS) {
 		return XST_FAILURE;
 	}
@@ -268,20 +323,14 @@ static int Ps2SetupIntrSystem(XIntc* IntcInstPtr, XPs2 *Ps2Ptr, u8 IntrId )
 		return XST_FAILURE;
 	}
 
-	//***********************************************TO DO 12*****************************+****************//
-	//***Postaviti mod rada upravljača prekida, povratnu vrijednost funkcije spremiti u varijablu Status***//
-
-	
-	//*****************************************************************************************************//
+	// Postaviti mod rada upravljača prekida
+	Status = XIntc_Start(IntcInstPtr,XIN_REAL_MODE);
 	if (Status != XST_SUCCESS) {
 		return XST_FAILURE;
 	}
 
-	//**********************************************TO DO 13******************************+****************//
-	//*********************************Omogućiti rad upravljača prekidima**********************************//
-
-	
-	//*****************************************************************************************************//
+	// Omogućiti rad upravljača prekidima
+	XIntc_Enable(IntcInstPtr,INTR_ID);
 
 	//Inicijalizacija iznimaka
 	Xil_ExceptionInit();

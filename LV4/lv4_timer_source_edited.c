@@ -170,9 +170,11 @@ void TimerCounterHandler(void *CallBackRef, u8 TmrCtrNumber)
 	int timeMS;
 	uint uCount;
 
+
 	// Brojati prekide i vrijednost prikazati na LE diodama razvojnog sustava
 	TimerExpired++;
 	XGpio_DiscreteWrite(&leds ,1 , TimerExpired);
+
 
 	// Dohvatiti vrijednost brojača, izračunati vrijeme u ms i vrijednost poslati preko UART-a
 	uCount = XTmrCtr_GetValue(InstancePtr, TmrCtrNumber);

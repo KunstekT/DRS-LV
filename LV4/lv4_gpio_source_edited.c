@@ -82,7 +82,7 @@ int GpioIntrInit(XIntc *IntcInstancePtr, XGpio *InstancePtr,
 	XIntc_Connect(IntcInstancePtr, IntrId, (Xil_ExceptionHandler)GpioHandler, InstancePtr);
 
 	// Omogućavanje rada interrupt controllera
-	void XIntc_Enable(InstancePtr, IntrId);
+	XIntc_Enable(InstancePtr, IntrId);
 
 	// Postavljanje moda rada interrupt controllera
 	Status = XIntc_Start(IntcInstancePtr, XIN_REAL_MODE);
