@@ -27,7 +27,7 @@
 #define X1POS	120	/**< Column Start Position */
 #define X2POS	120	 /**< Column End Position */
 #define Y1POS	30 	/**< Row Start Position */
-#define Y2POS	400	 /**< Row End Position */
+#define Y2POS	430	 /**< Row End Position */
 
 //**********************************//
 
@@ -75,8 +75,35 @@ int main() {
 
 	//****************TO DO 8****************//
 	//**********Očistiti ekran, nacrtati 4 vodoravne linije ekranu*********//
+	XTft_SetColor(&TftInstance, FGCOLOR_VALUE, BGCOLOR_VALUE);
+	XTft_ClearScreen(&TftInstance);
+	int index;
+	for (index = 120; index <= 520; index++) {
+		XTft_SetPixel(&TftInstance, index, 30, FGCOLOR_VALUE);
+		XTft_SetPixel(&TftInstance, index, 50, FGCOLOR_VALUE);
+		XTft_SetPixel(&TftInstance, index, 70, FGCOLOR_VALUE);
+		XTft_SetPixel(&TftInstance, index, 90, FGCOLOR_VALUE);
+	}
+
 
 	//***********************************//
+	
+	// ↓↓↓ drugi il treci zadatak idk
+	// XTft_SetColor(&TftInstance, GREEN_COLOR, BGCOLOR_VALUE);
+	// XTft_ClearScreen(&TftInstance);
+
+	// for (index = 100; index <= 280; index++) {
+	// 	XTft_SetPixel(&TftInstance, index, 20, FGCOLOR_VALUE);
+	// 	XTft_SetPixel(&TftInstance, index, 40, FGCOLOR_VALUE);
+	// 	XTft_SetPixel(&TftInstance, index, 60, FGCOLOR_VALUE);
+	// 	XTft_SetPixel(&TftInstance, index, 80, FGCOLOR_VALUE);
+	// }
+	// for (index = 20; index <= 80; index++) {
+	// 	XTft_SetPixel(&TftInstance, 100, index, FGCOLOR_VALUE);
+	// 	XTft_SetPixel(&TftInstance, 160, index, FGCOLOR_VALUE);
+	// 	XTft_SetPixel(&TftInstance, 220, index, FGCOLOR_VALUE);
+	// 	XTft_SetPixel(&TftInstance, 280,index, FGCOLOR_VALUE);
+	// }
 
 	return XST_SUCCESS;
 }
@@ -99,8 +126,7 @@ int TftInitialize(u32 TftDeviceId) {
 	//****************TO DO 3****************//
 	//****Inicijalizirati VGA kontroler, povratnu vrijednost spremiti u varijablu Status*****//
 
-	Status = XTft_CfgInitialize(&TftInstance, TftConfigPtr,
-			TftConfigPtr->BaseAddress);
+	Status = XTft_CfgInitialize(&TftInstance, TftConfigPtr, TftConfigPtr->BaseAddress);
 	//***********************************//
 
 	if (Status != XST_SUCCESS) {
